@@ -16,8 +16,11 @@
 package io.syndesis.server.endpoint.v1.handler.integration;
 
 import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -32,6 +35,7 @@ import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
 import io.syndesis.common.model.DataShape;
 import io.syndesis.common.model.Kind;
 import io.syndesis.common.model.ListResult;
@@ -126,6 +130,15 @@ public class IntegrationHandler extends BaseHandler implements Lister<Integratio
         }
 
         Updater.super.update(id, updatedIntegration);
+    }
+
+    @GET
+    @Path(value = "/test")
+    public String getTest(@Context HttpServletRequest request) {
+        System.out.println("headers: "+request.getHeaderNames());
+        String header = request.getHeader("X-Tenant");
+        System.out.println("tenant: "+ header);
+        return header;
     }
 
     @Override

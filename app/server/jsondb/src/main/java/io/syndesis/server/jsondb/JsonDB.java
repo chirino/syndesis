@@ -20,8 +20,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import io.syndesis.server.jsondb.impl.Index;
 
 /**
  * Provides a Java API to read/update a Key/Value database presented to the user a
@@ -30,6 +33,8 @@ import java.util.function.Consumer;
  * interested in working with.
  */
 public interface JsonDB {
+
+    public Collection<Index> getIndexes();
 
     /**
      * @param path to the json object or value to delete

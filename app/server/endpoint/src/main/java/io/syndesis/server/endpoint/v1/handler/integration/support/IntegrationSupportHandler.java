@@ -105,7 +105,7 @@ public class IntegrationSupportHandler {
     private static final BiFunction<Connection, String, Connection> RENAME_CONNECTION = (c, n) -> new Connection.Builder().createFrom(c).name(n).build();
 
     private final Migrator migrator;
-    private final SqlJsonDB jsondb;
+    private final JsonDB jsondb;
     private final IntegrationProjectGenerator projectGenerator;
     private final DataManager dataManager;
     private final IntegrationResourceManager resourceManager;
@@ -115,7 +115,7 @@ public class IntegrationSupportHandler {
 
     public IntegrationSupportHandler(
         final Migrator migrator,
-        final SqlJsonDB jsondb,
+        final JsonDB jsondb,
         final IntegrationProjectGenerator projectGenerator,
         final DataManager dataManager,
         final IntegrationResourceManager resourceManager,

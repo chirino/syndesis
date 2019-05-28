@@ -24,6 +24,7 @@ import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,6 +38,10 @@ import java.util.Optional;
 @Configuration
 public class DataStoreConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(Migrations.class);
+
+
+    @Value("${multitenant}")
+    private boolean multitenant;
 
     @Bean
     @Autowired
@@ -72,6 +77,8 @@ public class DataStoreConfiguration {
         } catch (@SuppressWarnings("PMD.AvoidCatchingGenericException") Exception ignore) {
             LOG.debug("Could not create tables", ignore);
         }
+
+
         return jsondb;
     }
 

@@ -564,6 +564,7 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
         }
     }
 
+    @Override
     public Collection<Index> getIndexes() {
         return indexes;
     }
