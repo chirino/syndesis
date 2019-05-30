@@ -35,8 +35,8 @@ fi
 #
 # TODO Could we avoid copying these files by moving them under the build directory
 #
-cp "$DIR/../syndesis.yml" "$DIR/build/conf/syndesis-template.yml"
 cp -R "$DIR/../addons/" "$DIR/build/conf/addons/"
+cp "$DIR/../../app/integration/project-generator/src/main/resources/io/syndesis/integration/project/generator/templates/prometheus-config.yml" "$DIR/pkg/generator/assets"
 
 if [[ "$USE_DOCKER_BUILD" == "true" ]] ; then
 
@@ -62,8 +62,10 @@ else
 
     export GO111MODULE=on
     go mod vendor
+    go generate ./pkg/...
     operator-sdk generate k8s
     # operator-sdk generate openapi
+    go test ./cmd/... ./pkg/...
     operator-sdk build "${OPERATOR_IMAGE_NAME}"
 
 fi

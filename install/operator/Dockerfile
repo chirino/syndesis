@@ -7,4 +7,5 @@ COPY go.sum .
 RUN go mod download
 COPY . .
 RUN go mod vendor
+RUN go test ./cmd/... ./pkg/...
 RUN go build -o /operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} -mod=vendor github.com/syndesisio/syndesis/install/operator/cmd/manager
