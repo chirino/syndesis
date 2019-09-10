@@ -1,0 +1,50 @@
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: syndesis-upgrade
+    labels:
+      app: syndesis
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-upgrade
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: {{.Env.UPGRADE_VOLUME_CAPACITY}}
+
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    name: {{.ProductName}}-upgrade-{{ .Tags.Upgrade }}
+    labels:
+      app: syndesis
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-upgrade
+  spec:
+    serviceAccountName: syndesis-operator
+    volumes:
+    - name: backup-dir
+      persistentVolumeClaim:
+        claimName: syndesis-upgrade
+    restartPolicy: Never
+    containers:
+    - name: syndesis-operator
+      image: '{{ .Syndesis.Spec.Registry }}/{{ .Images.SyndesisImagesPrefix }}/{{ .Images.Syndesis.Operator }}:{{ .Tags.Syndesis }}'
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: NAMESPACE
+          valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+      imagePullPolicy: IfNotPresent
+      command:
+        - "/usr/local/bin/entrypoint"
+        - "backup"
+        - "--backup"
+        - "/opt/backup"
+      volumeMounts:
+      - mountPath: /opt/backup
+        name: backup-dir

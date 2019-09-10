@@ -11,6 +11,7 @@ import (
 	"github.com/syndesisio/syndesis/install/operator/pkg/util"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"reflect"
 	"sigs.k8s.io/yaml"
@@ -34,6 +35,7 @@ type syndesisImages struct {
 	S2i      string
 	Upgrade  string
 	Komodo   string
+	Operator string
 }
 
 type images struct {
@@ -77,6 +79,7 @@ type Context struct {
 	Syndesis         *v1alpha1.Syndesis
 	ImagePullSecrets []string
 	Versions         map[string]string
+	api              kubernetes.Interface
 }
 
 func AssetAsBytes(path string) ([]byte, error) {
@@ -96,17 +99,25 @@ func RenderDir(directory string, context interface{}) ([]unstructured.Unstructur
 	return RenderFSDir(GetAssetsFS(), directory, context)
 }
 
-var templateFunctions = template.FuncMap{
-	"mapHasKey": func(item reflect.Value, key reflect.Value) (bool, error) {
-		if item.Kind() != reflect.Map {
-			return false, fmt.Errorf("mapHasKey requires a map type")
-		}
-		if x := item.MapIndex(key); x.IsValid() {
-			return true, nil
-		} else {
-			return false, nil
-		}
-	},
+func templateFunctions(scope interface{}) template.FuncMap {
+	functions := template.FuncMap{
+		"mapHasKey": func(item reflect.Value, key reflect.Value) (bool, error) {
+			if item.Kind() != reflect.Map {
+				return false, fmt.Errorf("mapHasKey requires a map type")
+			}
+			if x := item.MapIndex(key); x.IsValid() {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		},
+	}
+	//if ctx, ok := scope.(Context); ok {
+	//	functions["ImageStreamLookup"] = func(item reflect.Value, key reflect.Value) (string, error) {
+	//		return "", nil
+	//	}
+	//}
+	return functions
 }
 
 func RenderFSDir(assets http.FileSystem, directory string, context interface{}) ([]unstructured.Unstructured, error) {
@@ -160,7 +171,7 @@ func Render(filePath string, context interface{}) ([]unstructured.Unstructured, 
 			return nil, err
 		}
 
-		tmpl, err := template.New(filePath).Funcs(templateFunctions).Parse(string(fileData))
+		tmpl, err := template.New(filePath).Funcs(templateFunctions(context)).Parse(string(fileData))
 		if err != nil {
 			return nil, err
 		}

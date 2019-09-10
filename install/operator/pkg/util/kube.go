@@ -3,15 +3,18 @@ package util
 import (
 	"context"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"os"
 	"os/user"
 	"path/filepath"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 	"time"
 )
@@ -109,5 +112,40 @@ func WaitForResourceCondition(ctx context.Context, client dynamic.Interface, gvr
 				}
 			}
 		}
+	}
+}
+
+func GetPodWithLabelSelector(api kubernetes.Interface, namespace string, LabelSelector string) (*v1.Pod, error) {
+	podList, err := api.CoreV1().Pods(namespace).List(metav1.ListOptions{
+		LabelSelector: LabelSelector,
+	})
+	if err != nil {
+		return nil, err
+	}
+	switch len(podList.Items) {
+	case 1:
+		return &podList.Items[0], nil // All good..
+	case 0:
+		return nil, fmt.Errorf("syndesis-db pod is not running")
+	default:
+		return nil, fmt.Errorf("too many pods look like they could be the syndesis-db pod")
+	}
+}
+
+func ListInChunks(ctx context.Context, c client.Client, options *client.ListOptions, list *unstructured.UnstructuredList, handler func([]unstructured.Unstructured) error) (err error) {
+	for {
+		if err := c.List(ctx, options, list); err != nil {
+			return err
+		}
+		err = handler(list.Items)
+		if err != nil {
+			return err
+		}
+
+		if len(list.GetContinue()) == 0 {
+			return
+		}
+		// keep loading....
+		options.Raw.Continue = list.GetContinue()
 	}
 }

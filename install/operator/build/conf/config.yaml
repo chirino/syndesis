@@ -22,6 +22,7 @@ Images:
     Ui: syndesis-ui
     Upgrade: syndesis-upgrade
     Verifier: syndesis-meta
+    Operator: syndesis-operator
   SyndesisImagesPrefix: syndesis
 Name: fuse-ignite
 Ocp: false

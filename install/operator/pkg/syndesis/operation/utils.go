@@ -8,6 +8,12 @@ import (
 )
 
 func SetNamespaceAndOwnerReference(resource interface{}, syndesis *v1alpha1.Syndesis) {
+
+	// Should we avoid auto deleting PVCs?  If so.. we should uncomment:
+	//if util.ToRuntimeObject(resource).GetObjectKind().GroupVersionKind().Kind == "PersistentVolumeClaim" {
+	//	return
+	//}
+
 	object := util.ToMetaObject(resource)
 	object.SetNamespace(syndesis.Namespace)
 	object.SetOwnerReferences([]metav1.OwnerReference{
