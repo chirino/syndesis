@@ -99,7 +99,7 @@ func (a *upgradeAction) Execute(ctx context.Context, syndesis *v1alpha1.Syndesis
 	if upgradePod.Status.Phase == corev1.PodSucceeded {
 
 		// Upgrade finished (correctly)
-		a.upgradeResources(ctx, syndesis)
+		AttachSyndesisToResource(ctx, a.client, syndesis)
 
 		a.log.Info("Syndesis resource upgraded", "name", syndesis.Name, "targetVersion", targetVersion)
 		return a.completeUpgrade(ctx, syndesis, targetVersion)
@@ -141,7 +141,8 @@ func (a *upgradeAction) Execute(ctx context.Context, syndesis *v1alpha1.Syndesis
 	}
 }
 
-func (o *upgradeAction) upgradeResources(ctx context.Context, syndesis *v1alpha1.Syndesis) error {
+func AttachSyndesisToResource(ctx context.Context, c client.Client, syndesis *v1alpha1.Syndesis) error {
+
 	backupTypes := []metav1.TypeMeta{
 		metav1.TypeMeta{APIVersion: "v1", Kind: "ConfigMap"},
 		metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
@@ -175,11 +176,11 @@ func (o *upgradeAction) upgradeResources(ctx context.Context, syndesis *v1alpha1
 				"kind":       typeMeta.Kind,
 			},
 		}
-		err = util.ListInChunks(ctx, o.client, &options, &list, func(resources []unstructured.Unstructured) error {
+		err = util.ListInChunks(ctx, c, &options, &list, func(resources []unstructured.Unstructured) error {
 			for _, res := range resources {
 				// Make sure we are the owners..
 				operation.SetNamespaceAndOwnerReference(res, syndesis)
-				_, _, err := util.CreateOrUpdate(ctx, o.client, &res)
+				_, _, err := util.CreateOrUpdate(ctx, c, &res)
 				if err != nil {
 					return err
 				}
@@ -224,7 +225,7 @@ func (a *upgradeAction) RenderUpgradeResources(ctx context.Context, syndesis *v1
 		return nil, err
 	}
 
-	if syndesis.Spec.DevImages {
+	if syndesis.Spec.DevSupport {
 		is := v1.ImageStream{}
 		err := a.client.Get(ctx, client.ObjectKey{syndesis.Namespace, "syndesis-operator"}, &is)
 		if err == nil {
@@ -245,10 +246,6 @@ func (a *upgradeAction) RenderUpgradeResources(ctx context.Context, syndesis *v1
 }
 
 func (a *upgradeAction) completeUpgrade(ctx context.Context, syndesis *v1alpha1.Syndesis, newVersion string) error {
-	// After upgrade, pods may be detached
-	if err := operation.AttachSyndesisToResource(ctx, a.scheme, a.client, syndesis); err != nil {
-		return err
-	}
 
 	target := syndesis.DeepCopy()
 	target.Status.Phase = v1alpha1.SyndesisPhaseInstalled

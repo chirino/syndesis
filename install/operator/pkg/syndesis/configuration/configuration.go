@@ -13,6 +13,12 @@ type SyndesisEnvVar string
 var TemplateConfig string
 
 const (
+	//
+	// Please stop adding more ENV vars.  only use Syndesis CR fields.  All the env
+	// var *which are not secrets* should be deprecated and removed in a future release.
+	//
+	// Secretes should not be stored in the Syndesis CR. So the will remain vars source
+	// from the sydnesis-global-config secret and they are access as env vars until we find a better way to do it.
 	EnvRouteHostname                  SyndesisEnvVar = "ROUTE_HOSTNAME"
 	EnvOpenshiftMaster                SyndesisEnvVar = "OPENSHIFT_MASTER"
 	EnvOpenshiftConsoleUrl            SyndesisEnvVar = "OPENSHIFT_CONSOLE_URL"

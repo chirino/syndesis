@@ -10,7 +10,6 @@ import (
 
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1alpha1"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/configuration"
-	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/operation"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -39,7 +38,7 @@ func (a *upgradeLegacyAction) Execute(ctx context.Context, syndesis *v1alpha1.Sy
 
 	a.log.Info("Attaching Syndesis installation to resource", "name", syndesis.Name)
 
-	err := operation.AttachSyndesisToResource(ctx, a.scheme, a.client, syndesis)
+	err := AttachSyndesisToResource(ctx, a.client, syndesis)
 	if err != nil {
 		return err
 	}
